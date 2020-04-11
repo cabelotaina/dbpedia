@@ -446,9 +446,11 @@ public class DBpedia {
                     System.err.println("\n\n");
                     System.out.println("Label: "+label+" url: "+uri);
                     System.out.println("similarity between this label (\""+label+"\") and the above text (\""+last+"\"): "+ld(label, last));
-                    System.out.println("percent of similarity: "+ (float)ld(label, last)/(float)label.length());
+                    Integer max = Math.max(last.length(), label.length());
+                    System.out.println("percent of similarity: "+ (float)ld(label, last)/(float)max);
                     System.out.println("similarity with the finded label \""+input+"\": "+ld(label, input));
-                    System.out.println("percent of similarity: "+(float)ld(label, input)/(float)label.length());
+                    Integer max2 = Math.max(input.length(),label.length());
+                    System.out.println("percent of similarity: "+(float)ld(label, input)/(float)max2);
                     System.out.println("label lenght: "+label.length());
                     objectScored = new ScoredRDFNode(object, ld(label, last));
                 } else {
@@ -554,7 +556,7 @@ public class DBpedia {
         System.out.println("================================================================================");
         System.out.println("Test 2: Obtaining entities with certain label\n");
 
-        String label = "BM Atlético Madrid";
+        String label = "atlético madrid";
         List<String> forbiddenURIsPatterns = new ArrayList<String>();
         forbiddenURIsPatterns.add("Category");
         forbiddenURIsPatterns.add("_in_");
@@ -586,6 +588,26 @@ public class DBpedia {
 
     public static boolean ld(String a, String b, int max) {
         return distance(a, b, max) <= max;
+    }
+
+    public static int distance(String a, String b) {
+        a = a.toLowerCase();
+        b = b.toLowerCase();
+        // i == 0
+        int [] costs = new int [b.length() + 1];
+        for (int j = 0; j < costs.length; j++)
+            costs[j] = j;
+        for (int i = 1; i <= a.length(); i++) {
+            // j == 0; nw = lev(i - 1, j)
+            costs[0] = i;
+            int nw = i - 1;
+            for (int j = 1; j <= b.length(); j++) {
+                int cj = Math.min(1 + Math.min(costs[j], costs[j - 1]), a.charAt(i - 1) == b.charAt(j - 1) ? nw : nw + 1);
+                nw = costs[j];
+                costs[j] = cj;
+            }
+        }
+        return costs[b.length()];
     }
 
     private static int distance(String a, String b, int max) {
@@ -641,10 +663,12 @@ public class DBpedia {
         try {
             // DBpedia.test0();
             // DBpedia.test1();
-            // DBpedia.test2();
+            DBpedia.test2();
 
-            System.out.println((float)ld("BM Atlético Madrid", "Atlético Madrid Rugby")/(float)"BM Atlético Madrid".length());
-
+            // System.out.println((float)distance("Atlético Madrid", "BM Atlético Madrid")/(float)"BM Atlético Madrid".length());
+            // System.out.println((float)distance("Atlético Madrid Rugby", "BM Atlético Madrid")/(float)"Atlético Madrid Rugby".length());
+            // System.out.println((float)distance("Atlético Madrid Féminas", "Atlético Madrid Rugby")/(float)"Atlético Madrid Rugby".length());
+            // System.out.println((float)distance(" Atlético Madrid (women)", "Atlético Madrid Féminas")/(float)"Atlético Madrid Féminas".length());
 
             // Test for the implementation of Levenshtein distance algoritmn used
             // System.out.println(ld("kitten", "kitten") + " " + // 0
